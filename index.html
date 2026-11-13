@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Каталог Алтай</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Поиск товаров по коду, артикулу и названию: цены сайта alservice.ru">
+<meta name="theme-color" content="#0B5A3C">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Каталог">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&display=swap">
+<style>
+/* Идея: каждый товар выглядит как магазинный ценник — с отверстием слева и крупной ценой справа.
+   Палитра: бетон, белый и тёмно-зелёный бренда. Один шрифт (Archivo), контраст даёт ширина начертания. */
+:root{
+  --bg:#d9dcdd; --card:#ffffff; --ink:#17191b; --muted:#5d666c; --line:#c4c9cc;
+  --brand:#0b5a3c; --brand-ink:#ffffff; --brand-soft:#cfe9da; --chip:#eef0f1; --chip-on:#0b5a3c; --chip-on-ink:#ffffff;
+  --hole:#d9dcdd; --shadow:0 1px 0 rgba(23,25,27,.08);
+  --f:"Archivo","Arial Narrow",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{--bg:#101412;--card:#1b201d;--ink:#eef2ef;--muted:#9aa8a0;--line:#2b332f;--chip:#242b27;--chip-on:#3fae7a;--chip-on-ink:#07160f;--brand:#0b5a3c;--brand-soft:#1f5a41;--hole:#121416;--shadow:none}
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.35 var(--f);font-stretch:100%;min-height:100dvh}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.wrap{max-width:820px;margin:0 auto;padding-inline:max(14px,env(safe-area-inset-left)) max(14px,env(safe-area-inset-right))}
+
+/* верхняя панель */
+.top{position:sticky;top:0;z-index:20;background:var(--brand);color:var(--brand-ink);padding-top:env(safe-area-inset-top)}
+.top .wrap{padding-block:10px 10px;display:grid;gap:9px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand h1{margin:0;font:900 26px/1 var(--f);font-stretch:70%;letter-spacing:.005em}
+.brand span{font:600 13px var(--f);font-stretch:90%;opacity:.85;font-variant-numeric:tabular-nums}
+.search{position:relative}
+.search svg{position:absolute;left:13px;top:50%;translate:0 -50%;width:22px;height:22px;pointer-events:none}
+.search input{width:100%;height:52px;border:0;border-radius:6px;background:#fff;color:#17191b;padding:0 48px 0 44px;font-size:18px;font-weight:500;box-shadow:inset 0 0 0 2px rgba(255,255,255,.0)}
+.search input::placeholder{color:#6d767c}
+.search input::-webkit-search-cancel-button{display:none}
+.clear{position:absolute;right:4px;top:50%;translate:0 -50%;width:44px;height:44px;border:0;background:none;display:none;color:#17191b}
+.clear svg{position:static;translate:none;width:20px;height:20px}
+.has-q .clear{display:block}
+
+/* фильтры */
+.bar{background:var(--bg);border-bottom:1px solid var(--line)}
+.bar .wrap{padding-block:9px;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.bar .wrap::-webkit-scrollbar{display:none}
+.chip{flex:none;min-height:40px;padding:0 14px;border-radius:6px;border:1px solid var(--line);background:var(--chip);font:700 14px var(--f);font-stretch:88%;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.chip[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-ink);border-color:var(--chip-on)}
+.chip small{font:600 12px var(--f);opacity:.65}
+.chip.sec{border-style:dashed}
+.sortrow[hidden]{display:none}
+.sortrow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 4px}
+.found{font:700 15px var(--f);font-stretch:85%;color:var(--muted)}
+.sortrow label{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.sortrow select{height:40px;border-radius:6px;border:1px solid var(--line);background:var(--card);padding:0 8px;font-size:14px}
+
+/* ценники */
+.list{display:grid;gap:8px;padding-block:6px 26px;margin:0;list-style:none;padding-inline:0}
+.tag{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;background:var(--card);border-radius:6px 14px 14px 6px;padding:12px 14px 12px 38px;box-shadow:var(--shadow)}
+.tag::before{content:"";position:absolute;left:12px;top:50%;translate:0 -50%;width:13px;height:13px;border-radius:50%;background:var(--hole);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.tag h2{margin:0;font:600 16px/1.3 var(--f);overflow-wrap:anywhere}
+.tag mark{background:var(--brand-soft);color:inherit;border-radius:2px;padding:0 1px}
+.ids{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;grid-column:1}
+.id{min-height:34px;padding:0 10px;border-radius:5px;border:1px solid var(--line);background:var(--chip);font:600 13px var(--f);font-stretch:92%;font-variant-numeric:tabular-nums;display:inline-flex;align-items:center;gap:6px;max-width:100%}
+.id i{font-style:normal;color:var(--muted);font-weight:500}
+.id b{font-weight:700;overflow-wrap:anywhere;text-align:left}
+.id.ok{background:var(--brand);border-color:var(--brand);color:#fff}
+.cat{grid-column:1;font-size:13px;color:var(--muted);margin-top:2px}
+.side{grid-column:2;grid-row:1 / span 3;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;gap:6px}
+.price{text-align:right;font-variant-numeric:tabular-nums;line-height:1}
+.price b{display:block;font:900 30px/1 var(--f);font-stretch:68%;letter-spacing:.005em;white-space:nowrap}
+.price small{font:700 13px var(--f);color:var(--muted)}
+.price.none b{font-size:20px;color:var(--muted)}
+.star{width:44px;height:44px;margin:-6px -8px -6px 0;border:0;background:none;display:grid;place-items:center;color:var(--muted)}
+.star svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8}
+.star[aria-pressed="true"]{color:var(--ink)}
+.star[aria-pressed="true"] svg{fill:var(--brand);stroke:var(--brand)}
+@media (prefers-color-scheme:dark){.star[aria-pressed="true"] svg{fill:#3fae7a;stroke:#3fae7a}}
+
+.more{display:block;width:100%;min-height:50px;margin:4px 0 30px;border-radius:6px;border:2px solid var(--ink);background:none;font:800 16px var(--f);font-stretch:90%}
+.empty{padding:34px 6px 10px;color:var(--muted);text-align:left}
+.empty h2{margin:0 0 8px;font:800 24px/1.1 var(--f);font-stretch:72%;color:var(--ink)}
+.empty p{margin:0 0 6px;max-width:46ch}
+.recent{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.hint{margin-top:18px;font-size:13px;color:var(--muted);max-width:60ch}
+
+/* выбор раздела */
+dialog{width:min(560px,100%);max-height:86dvh;margin:auto auto 0;padding:0;border:0;border-radius:14px 14px 0 0;background:var(--card);color:var(--ink);overflow:hidden}
+dialog::backdrop{background:rgba(10,12,13,.55)}
+@media (min-width:700px){dialog{margin:auto;border-radius:14px}}
+.sheet{display:grid;grid-template-rows:auto auto minmax(0,1fr);max-height:86dvh}
+.sheet header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 6px}
+.sheet h2{margin:0;font:900 22px/1 var(--f);font-stretch:72%}
+.sheet header button{width:44px;height:44px;border:0;background:none;font-size:26px;line-height:1}
+.sheet input{margin:6px 16px 8px;height:46px;border-radius:6px;border:2px solid var(--ink);background:var(--card);padding:0 12px;font-size:17px}
+.sheet ul{list-style:none;margin:0;padding:0 8px 16px;overflow:auto;overscroll-behavior:contain}
+.sheet li button{display:flex;justify-content:space-between;gap:12px;width:100%;min-height:48px;padding:8px;border:0;border-bottom:1px solid var(--line);background:none;text-align:left;align-items:center}
+.sheet li button[aria-current="true"]{font-weight:800;background:var(--chip)}
+.sheet li span{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.toast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));translate:-50% 20px;opacity:0;pointer-events:none;background:var(--ink);color:var(--bg);padding:12px 16px;border-radius:6px;font:700 15px var(--f);transition:opacity .18s,translate .18s;max-width:calc(100% - 28px);z-index:40}
+.toast.on{opacity:1;translate:-50% 0}
+.foot{padding-block:0 40px;color:var(--muted);font-size:13px;line-height:1.5}
+@media (max-width:380px){.price b{font-size:26px}.brand h1{font-size:23px}}
+@media (prefers-reduced-motion:reduce){.toast{transition:none}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><h1>Каталог Алтай</h1><span id="total"></span></div>
+    <div class="search" id="searchbox">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#17191b" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m15.5 15.5 5 5"/></svg>
+      <input id="q" type="search" inputmode="search" enterkeyhint="search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Код, артикул или название" aria-label="Поиск по коду, артикулу и названию">
+      <button class="clear" id="clear" type="button" aria-label="Очистить поиск"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </div>
+  </div>
+</header>
+<nav class="bar" aria-label="Фильтры"><div class="wrap" id="chips"></div></nav>
+
+<main class="wrap">
+  <div class="sortrow">
+    <div class="found" id="found" role="status" aria-live="polite"></div>
+    <label>Порядок
+      <select id="sort" aria-label="Порядок">
+        <option value="rel">Лучшие совпадения</option>
+        <option value="name">По названию</option>
+        <option value="pa">Цена: дешевле</option>
+        <option value="pd">Цена: дороже</option>
+      </select>
+    </label>
+  </div>
+  <ul class="list" id="list"></ul>
+  <div id="moreWrap"></div>
+  <p class="foot" id="foot"></p>
+</main>
+
+<dialog id="dlg" aria-labelledby="dlgT">
+  <div class="sheet">
+    <header><h2 id="dlgT">Разделы</h2><button type="button" id="dlgX" aria-label="Закрыть">×</button></header>
+    <input id="dq" type="search" autocomplete="off" placeholder="Найти раздел" aria-label="Найти раздел">
+    <ul id="dlist"></ul>
+  </div>
+</dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="data.js"></script>
+<script>
+(function(){
+"use strict";
+var RAW = window.CATALOG || [];
+var $ = function(id){return document.getElementById(id);};
+var coll = new Intl.Collator("ru",{numeric:true,sensitivity:"base"});
+var nf = new Intl.NumberFormat("ru-RU",{minimumFractionDigits:2,maximumFractionDigits:2});
+var LOOK = {"а":"a","в":"b","е":"e","к":"k","м":"m","н":"h","о":"o","р":"p","с":"c","т":"t","х":"x","у":"y"};
+function norm(s){return String(s).toLowerCase().replace(/ё/g,"е").replace(/[авекмнорстху]/g,function(c){return LOOK[c];});}
+function flat(s){return norm(s).replace(/[^a-zа-я0-9]/g,"");}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function store(k,v){try{if(v===undefined){return localStorage.getItem(k);}localStorage.setItem(k,v);}catch(e){return null;}}
+
+var ITEMS = RAW.map(function(r,i){
+  var t = r[0]+" "+r[1]+" "+r[2];
+  return {i:i,code:r[0],art:r[1],name:r[2],price:r[3],cat:r[4],dept:r[5],hay:norm(t),fl:flat(t),fc:flat(r[0]),fa:flat(r[1])};
+});
+var DEPTS = {}; ITEMS.forEach(function(r){DEPTS[r.dept]=(DEPTS[r.dept]||0)+1;});
+var DEPT_ORDER = Object.keys(DEPTS).sort(function(a,b){return DEPTS[b]-DEPTS[a];});
+var CATS = {}; ITEMS.forEach(function(r){CATS[r.cat]=(CATS[r.cat]||0)+1;});
+var CAT_LIST = Object.keys(CATS).sort(coll.compare);
+
+var state = {q:"", dept:"", cat:"", fav:false, sort:"rel", shown:0};
+var PAGE = 40;
+var favs = {};
+try{ (JSON.parse(store("fav")||"[]")).forEach(function(c){favs[c]=1;}); }catch(e){}
+function saveFavs(){store("fav",JSON.stringify(Object.keys(favs)));}
+var recent = []; try{recent = JSON.parse(store("recent")||"[]");}catch(e){}
+
+$("total").textContent = ITEMS.length.toLocaleString("ru-RU")+" товаров";
+$("foot").textContent = "Цены сайта alservice.ru на "+(window.CATALOG_DATE||"")+", розничные. Артикул показан, если он есть в названии на сайте. Нажмите на код или артикул, чтобы скопировать.";
+
+/* фильтры */
+function chipsHtml(){
+  var h = '<button class="chip" data-d="" aria-pressed="'+(!state.dept&&!state.fav)+'">Все</button>';
+  h += '<button class="chip" data-fav="1" aria-pressed="'+state.fav+'">★ Избранное <small>'+Object.keys(favs).length+'</small></button>';
+  DEPT_ORDER.forEach(function(d){h += '<button class="chip" data-d="'+esc(d)+'" aria-pressed="'+(state.dept===d)+'">'+esc(d)+'</button>';});
+  h += '<button class="chip sec" data-sec="1">'+(state.cat?esc(state.cat)+' ×':'Раздел…')+'</button>';
+  return h;
+}
+function drawChips(){ $("chips").innerHTML = chipsHtml(); }
+$("chips").addEventListener("click",function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  if(b.hasAttribute("data-sec")){ if(state.cat){state.cat=""; update();} else openDlg(); return; }
+  if(b.hasAttribute("data-fav")){ state.fav=!state.fav; if(state.fav){state.dept="";} update(); return; }
+  state.dept = b.getAttribute("data-d"); state.fav=false; update();
+});
+
+/* поиск */
+function words(q){return norm(q).split(/\s+/).filter(Boolean);}
+function match(){
+  var w = words(state.q), fw = w.map(flat);
+  var qf = flat(state.q);
+  var out = [];
+  for(var n=0;n<ITEMS.length;n++){
+    var r = ITEMS[n];
+    if(state.dept && r.dept!==state.dept) continue;
+    if(state.cat && r.cat!==state.cat) continue;
+    if(state.fav && !favs[r.code]) continue;
+    var ok = true, k;
+    for(k=0;k<w.length;k++){
+      if(r.hay.indexOf(w[k])<0 && !(fw[k] && r.fl.indexOf(fw[k])>=0)){ok=false;break;}
+    }
+    if(!ok) continue;
+    var s = 3;
+    if(qf){
+      if(r.fc===qf||r.fa===qf) s=0;
+      else if(r.fc.indexOf(qf)===0||r.fa.indexOf(qf)===0) s=1;
+      else if(r.fc.indexOf(qf)>=0||r.fa.indexOf(qf)>=0) s=2;
+    }
+    out.push({r:r,s:s});
+  }
+  var so = state.sort;
+  out.sort(function(a,b){
+    var x;
+    if(so==="pa") x=(a.r.price==null?1e12:a.r.price)-(b.r.price==null?1e12:b.r.price);
+    else if(so==="pd") x=(b.r.price==null?-1:b.r.price)-(a.r.price==null?-1:a.r.price);
+    else if(so==="name") x=coll.compare(a.r.name,b.r.name);
+    else x=a.s-b.s;
+    return x||coll.compare(a.r.name,b.r.name)||a.r.i-b.r.i;
+  });
+  return out.map(function(o){return o.r;});
+}
+function hl(text){
+  var ws = state.q.trim().split(/\s+/).filter(function(x){return x.length>1;});
+  var t = esc(text);
+  if(!ws.length) return t;
+  try{
+    var re = new RegExp("("+ws.map(function(x){return esc(x).replace(/[.*+?^${}()|[\]\\]/g,"\\$&");}).join("|")+")","gi");
+    return t.replace(re,"<mark>$1</mark>");
+  }catch(e){return t;}
+}
+function tagHtml(r){
+  var fav = !!favs[r.code];
+  return '<li class="tag"><h2>'+hl(r.name)+'</h2>'
+    + '<div class="ids"><button class="id" data-copy="'+esc(r.code)+'" aria-label="Скопировать код '+esc(r.code)+'"><i>код</i><b>'+hl(r.code)+'</b></button>'
+    + (r.art?'<button class="id" data-copy="'+esc(r.art)+'" aria-label="Скопировать артикул '+esc(r.art)+'"><i>арт.</i><b>'+hl(r.art)+'</b></button>':'')
+    + '</div><div class="cat">'+esc(r.cat)+'</div>'
+    + '<div class="side"><div class="price'+(r.price==null?' none':'')+'">'+(r.price==null?'<b>нет цены</b>':'<b>'+nf.format(r.price)+'</b><small>рублей</small>')+'</div>'
+    + '<button class="star" data-fav="'+esc(r.code)+'" aria-pressed="'+fav+'" aria-label="'+(fav?'Убрать из избранного':'В избранное')+'"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.7 5.6 6.1.8-4.5 4.2 1.1 6.1L12 17.2 6.6 20.2l1.1-6.1L3.2 9.9l6.1-.8z" stroke-linejoin="round"/></svg></button></div></li>';
+}
+var current = [];
+function empty(){
+  var h = '<li class="empty"><h2>Что ищем?</h2><p>Введите код, артикул или часть названия. Например: <b>319307</b>, <b>3215-075</b> или <b>струбцина</b>.</p>';
+  if(recent.length){ h += '<div class="recent">'+recent.map(function(x){return '<button class="chip" data-r="'+esc(x)+'">'+esc(x)+'</button>';}).join("")+'</div>'; }
+  return h+'</li>';
+}
+function render(more){
+  var has = state.q.trim().length>0 || state.dept || state.cat || state.fav;
+  document.body.classList.toggle("has-q", state.q.length>0);
+  drawChips();
+  document.querySelector(".sortrow").hidden = !has;
+  if(!has){
+    current=[]; $("list").innerHTML = empty(); $("moreWrap").innerHTML="";
+    $("found").textContent = ""; document.querySelector(".sortrow").hidden = true;
+    return;
+  }
+  if(!more){ current = match(); state.shown = PAGE; } else { state.shown += PAGE; }
+  var rows = current.slice(0,state.shown);
+  if(!current.length){
+    $("list").innerHTML = '<li class="empty"><h2>Ничего не найдено</h2><p>'+(state.fav?'В избранном пока пусто. Нажмите звёздочку у товара.':'Попробуйте короче: часть артикула, последние цифры кода или одно слово из названия. Отдел и раздел тоже сужают поиск.')+'</p></li>';
+    $("moreWrap").innerHTML="";
+  } else {
+    $("list").innerHTML = rows.map(tagHtml).join("");
+    $("moreWrap").innerHTML = current.length>rows.length ? '<button class="more" id="more">Показать ещё ('+(current.length-rows.length)+')</button>' : "";
+  }
+  $("found").textContent = "Найдено: "+current.length.toLocaleString("ru-RU");
+}
+function update(){ state.shown=0; render(false); }
+
+var timer;
+$("q").addEventListener("input",function(e){
+  state.q = e.target.value; clearTimeout(timer); timer=setTimeout(function(){render(false);},90);
+});
+$("q").addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.target.blur(); remember(state.q); } });
+$("q").addEventListener("blur",function(){ remember(state.q); });
+$("clear").addEventListener("click",function(){ $("q").value=""; state.q=""; render(false); $("q").focus(); });
+function remember(q){
+  q=q.trim(); if(q.length<2) return;
+  recent = [q].concat(recent.filter(function(x){return x!==q;})).slice(0,6);
+  store("recent",JSON.stringify(recent));
+}
+$("sort").addEventListener("change",function(e){state.sort=e.target.value; render(false);});
+
+/* список: копирование, избранное, ещё */
+var toastT;
+function toast(msg){ var t=$("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toastT); toastT=setTimeout(function(){t.classList.remove("on");},1600); }
+function copy(text,btn){
+  function done(){ toast("Скопировано: "+text); if(btn){btn.classList.add("ok"); setTimeout(function(){btn.classList.remove("ok");},900);} }
+  if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(text).then(done,fallback); } else fallback();
+  function fallback(){
+    var ta=document.createElement("textarea"); ta.value=text; ta.setAttribute("readonly",""); ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); done(); }catch(e){ toast("Не удалось скопировать"); }
+    document.body.removeChild(ta);
+  }
+}
+$("list").addEventListener("click",function(e){
+  var b = e.target.closest("button"); if(!b) return;
+  if(b.hasAttribute("data-copy")){ copy(b.getAttribute("data-copy"),b); return; }
+  if(b.hasAttribute("data-fav")){
+    var c=b.getAttribute("data-fav");
+    if(favs[c]) delete favs[c]; else favs[c]=1;
+    saveFavs();
+    var on=!!favs[c]; b.setAttribute("aria-pressed",on); b.setAttribute("aria-label",on?"Убрать из избранного":"В избранное");
+    if(state.fav && !on){ render(false); } else drawChips();
+    return;
+  }
+  if(b.hasAttribute("data-r")){ $("q").value=b.getAttribute("data-r"); state.q=$("q").value; render(false); }
+});
+$("moreWrap").addEventListener("click",function(e){ if(e.target.id==="more"){ render(true); } });
+
+/* выбор раздела */
+var dlg = $("dlg");
+function drawDlg(){
+  var f = norm($("dq").value.trim());
+  var list = CAT_LIST.filter(function(c){return !f || norm(c).indexOf(f)>=0;});
+  $("dlist").innerHTML = '<li><button data-c="" '+(state.cat===""?'aria-current="true"':'')+'>Все разделы<span>'+ITEMS.length+'</span></button></li>'
+    + list.map(function(c){return '<li><button data-c="'+esc(c)+'" '+(state.cat===c?'aria-current="true"':'')+'>'+esc(c)+'<span>'+CATS[c]+'</span></button></li>';}).join("");
+}
+function openDlg(){ $("dq").value=""; drawDlg(); if(dlg.showModal) dlg.showModal(); else dlg.setAttribute("open",""); }
+$("dq").addEventListener("input",drawDlg);
+$("dlist").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  state.cat=b.getAttribute("data-c"); dlg.close(); update();
+});
+$("dlgX").addEventListener("click",function(){dlg.close();});
+dlg.addEventListener("click",function(e){ if(e.target===dlg) dlg.close(); });
+
+render(false);
+
+/* работа без интернета */
+if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
+  window.addEventListener("load",function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
+})();
+</script>
+</body>
+</html>
